@@ -1,0 +1,53 @@
+services:
+  cache:
+    container_name: crawler-cache
+    image: redis:latest
+    tty: true
+    # privileged: true
+    # restart: always
+    volumes:
+      - ./redis:/usr/local/etc/redis
+      - ./redis-data:/usr/local/etc/redis/data
+    command: sh -c "touch /usr/local/etc/redis/redis-server.log && redis-server /usr/local/etc/redis/redis.conf"
+    networks:
+      - sc-crawler-network
+    ports:
+      - "6379:6379"
+
+  db:
+    container_name: crawler-db
+    image: postgres
+    ports:
+      - "5999:5432"
+    networks:
+      - sc-crawler-network
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${TYPEORM_USER}
+      - POSTGRES_PASSWORD=${TYPEORM_PASSWORD}
+      - POSTGRES_DB=${TYPEORM_DATABASE}
+
+  crawler:
+    container_name: crawler-backend
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      - REDIS_HOST=crawler-cache
+      - TYPEORM_HOST=crawler-db
+    networks:
+      - sc-crawler-network
+    ports:
+      - "3002:3000"
+    depends_on:
+      - cache
+      - db
+
+networks:
+  sc-crawler-network:
+    driver: bridge
+
+# volumes:
+#   db_data:
+#     d

@@ -1,0 +1,4 @@
+node_modules
+db_data
+redis/data
+redis/redis-server.log
